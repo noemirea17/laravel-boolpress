@@ -3,6 +3,7 @@
 use Illuminate\Database\Seeder;
 use Faker\Generator as Faker;
 use App\Post;
+use Illuminate\Support\Str; //serve ad importare lo slug
 
 class PostsTableSeeder extends Seeder
 {
@@ -20,6 +21,22 @@ class PostsTableSeeder extends Seeder
             $new_post->text = $faker->paragraph();
             $new_post->author = $faker->name();
 
+            $slug = Str::slug($new_post->title, '-');
+
+            //verifico che lo slag non esista già nel database
+            $slug_base = $slug;
+
+            $post_presente = Post::where('slug', $slug)->first(); //select * from posts where slug = $slug
+            $contatore = 1;
+           
+            while($post_presente) {
+                $slug = $slug_base . '-' . $contatore;
+                $contatore++;
+                $post_presente = Post::where('slug', $slug)->first();
+            }
+
+            $new_post->slug = $slug;
+            $new_post->user_id = 1;
             $new_post->save();
 
         }
