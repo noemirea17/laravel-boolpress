@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Post;
 
-class PostsController extends Controller
+class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,13 +17,11 @@ class PostsController extends Controller
      */
     public function index()
     {
-        $posts = Post::all();
-
         $data = [
-            'posts' => $posts
+            'posts' => Post::all()
         ];
 
-        return view('posts.index', $data);
+        return view('admin.posts.index', $data);
     }
 
     /**
@@ -30,7 +31,7 @@ class PostsController extends Controller
      */
     public function create()
     {
-        return view('posts.create');
+        return view('admin.posts.create');
     }
 
     /**
@@ -41,21 +42,34 @@ class PostsController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
-        
-        $new_text = new Post();
-
         $request->validate([
             'title' => 'required|max:50',
-            'text' => 'required|max:500',
-            'author' => 'required|max:50'
-            
+            'text' => 'required',
         ]);
 
-        $new_text->fill($data);
-        $new_text->save();
+        $data = $request->all();
 
-        return redirect()->route('posts.index');
+        $new_post = new Post();
+        $new_post->fill($data);
+
+        $slug = Str::slug($new_post->title);
+        $slug_base = $slug;
+
+        $post_presente = Post::where('slug', $slug)->first();
+        $contatore = 1;
+
+        while($post_presente) {
+            $slug = $slug_base.'-'.$contatore;
+            $contatore++;
+            $post_presente = Post::where('slug', $slug)->first();
+        }
+
+        $new_post->slug = $slug;
+
+        $new_post->user_id = Auth::id();
+        $new_post->save();
+
+        return redirect()->route('admin.posts.index');
     }
 
     /**
@@ -72,9 +86,8 @@ class PostsController extends Controller
             $data = [
                 'post' => $post
             ];
-
-            return view('posts.show', $data);
         }
+        return view('admin.posts.show', $data);
     }
 
     /**
@@ -85,7 +98,7 @@ class PostsController extends Controller
      */
     public function edit(Post $post)
     {
-        return view('posts.edit', compact('post'));
+        return view('admin.posts.edit', compact('post'));
     }
 
     /**
@@ -98,10 +111,9 @@ class PostsController extends Controller
     public function update(Request $request, Post $post)
     {
         $data = $request->all();
-
         $post->update($data);
 
-        return redirect()->route('posts.index', $post);
+        return redirect()->route('admin.posts.index', $post);
     }
 
     /**
@@ -114,6 +126,6 @@ class PostsController extends Controller
     {
         $post->delete();
 
-        return redirect()->route('posts.index');
+        return redirect()->route('admin.posts.index');
     }
 }

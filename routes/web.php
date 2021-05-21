@@ -24,6 +24,16 @@ Route::prefix('admin')
     ->middleware('auth')
     ->group(function () {
         Route::get('/', 'HomeController@index')->name('admin-home');
+        Route::resource('/posts', PostController::Class)->names([
+
+            'index' => 'admin.posts.index',
+            'show' => 'admin.posts.show',
+            'create' => 'admin.posts.create',
+            'edit' => 'admin.posts.edit',
+            'update' => 'admin.posts.update',
+            'store' => 'admin.posts.store',
+            'destroy' => 'admin.posts.destroy'
+        ]);
 });
 
 // Route::get('/admin', 'HomeController@index')->name('admin-home')->middleware('auth');
